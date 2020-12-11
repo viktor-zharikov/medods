@@ -4,7 +4,7 @@ if [ $? -ne 0 ]; then
 echo "Error then download report file"
 exit 2
 fi
-if [ $1 = "" ]
+if [[ $1 = "" ]]
 then
 server=LOG
 else
