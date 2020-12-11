@@ -22,10 +22,16 @@ mkdir -p arhives
 tar -zcf $server"_"$datainname $server"_"$datainname"_report.out" $server"_"$datainname"_failed.out" $server"_"$datainname"_running.out" # if need list.out just add them
 mv -n $server"_"$datainname ./arhives #???? if arhive exist and broken?????
 rm -f *.out $server"_"$datainname 2>/dev/null # !!!ACHTUNG!!! DELETE ALL FILES *.out!
-if ! tar -xOf ./arhives/$server"_"$datainname &> /dev/null; then # test arhive even if it exist
-echo "Error in arhive file"
-exit 1
-else
+if tar -xOf ./arhives/$server"_"$datainname &> /dev/null; then # test arhive even if it exist
 echo "No error"
 exit 0
 fi
+echo "Error in arhive file"
+while [ "$?" -eq 0 ]; do
+echo "Delete arhive file?  y\n"; read answ
+case $answ in
+y|Y) echo  $server"_"$datainname "deleted"; rm -f ./arhives/$server"_"$datainname &> /dev/null; exit 0;;
+n|N) echo  $server"_"$datainname "not deleted by careful"; exit 1 ;;
+*) echo ""
+esac
+done
