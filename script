@@ -1,7 +1,6 @@
 #!/bin/bash
-wget https://raw.githubusercontent.com/GreatMedivack/files/master/list.out &>/dev/null
-if [ $? -ne 0 ]; then
-echo "Error then download report file"
+if ! wget --timeout=15 https://raw.githubusercontent.com/GreatMedivack/files/master/list.out &>/dev/null; then
+echo "Error in wget"
 exit 2
 fi
 if [ -z $1 ]
@@ -23,8 +22,7 @@ mkdir -p arhives
 tar -zcf $server"_"$datainname $server"_"$datainname"_report.out" $server"_"$datainname"_failed.out" $server"_"$datainname"_running.out" # if need list.out just add them
 mv -n $server"_"$datainname ./arhives #???? if arhive exist and broken?????
 rm -f *.out $server"_"$datainname 2>/dev/null # !!!ACHTUNG!!! DELETE ALL FILES *.out!
-tar -xOf ./arhives/$server"_"$datainname &> /dev/null # test arhive even if it exist
-if [ $? -ne 0 ]; then
+if ! tar -xOf ./arhives/$server"_"$datainname &> /dev/null; then # test arhive even if it exist
 echo "Error in arhive file"
 exit 1
 else
