@@ -1,37 +1,16 @@
 #!/bin/bash
-if ! wget --timeout=15 https://raw.githubusercontent.com/GreatMedivack/files/master/list.out &>/dev/null; then
-echo "Error in wget"
-exit 2
-fi
-if [ -z $1 ]
-then
-server=LOG
-else
-server=$1
-fi
+wget --timeout=15 https://raw.githubusercontent.com/GreatMedivack/files/master/list.out &>/dev/null || { echo -e "\e[31mError in wget\e[0m" && exit 2; }  
 datainname=$(date +%d_%m_%y)
-grep '\(Error\|CrashLoopBackOff\)' list.out | awk '{print $1}' > $server"_"$datainname"_failed.out"
-grep 'Running' list.out | awk '{print $1}' > $server"_"$datainname"_running.out"
-sed -ri 's/\-[a-z0-9]{4,}+\-.[^\-]+$//g' $server"_"$datainname"_failed.out" # Если нужны срабатывания на demomed-init-job-vsgjv, удалить{4,}
-sed -ri 's/\-[a-z0-9]{4,}+\-.[^\-]+$//g' $server"_"$datainname"_running.out"
-install -m 444 <(echo -e "- Количество работающих сервисов: `wc -l $server"_"$datainname"_running.out"| awk '{print $1}'`\n
-- Количество сервисов с ошибками: `wc -l $server"_"$datainname"_failed.out" | awk '{print $1}'`\n
+grep '\(Error\|CrashLoopBackOff\)' list.out | awk '{print $1}' | sed -r 's/\-[a-z0-9]{4,}+\-.[^\-]+$//g' > ${1:-log}"_"$datainname"_failed.out"
+grep 'Running' list.out | awk '{print $1}' | sed -r 's/\-[a-z0-9]{4,}+\-.[^\-]+$//g' > ${1:-log}"_"$datainname"_running.out" # Если нужны срабатывания на demomed-init-job-vsgjv, удалить{4,}
+install -m 444 <(echo -e "- Количество работающих сервисов: `wc -l ${1:-log}"_"$datainname"_running.out"| awk '{print $1}'`\n
+- Количество сервисов с ошибками: `wc -l ${1:-log}"_"$datainname"_failed.out" | awk '{print $1}'`\n
 - Имя системного пользователя: `echo $USER`\n
-- Дата: `date +%x` ") $server"_"$datainname"_report.out"
+- Дата: `date +%x` ") ${1:-log}"_"$datainname"_report.out"
 mkdir -p arhives 
-tar -zcf $server"_"$datainname $server"_"$datainname"_report.out" $server"_"$datainname"_failed.out" $server"_"$datainname"_running.out" # if need list.out just add them
-mv -n $server"_"$datainname ./arhives #???? if arhive exist and broken?????
-rm -f *.out $server"_"$datainname 2>/dev/null # !!!ACHTUNG!!! DELETE ALL FILES *.out!
-if tar -xOf ./arhives/$server"_"$datainname &> /dev/null; then # test arhive even if it exist
-echo "No error"
+tar -zcf ${1:-log}"_"$datainname ${1:-log}"_"$datainname"_report.out" ${1:-log}"_"$datainname"_failed.out" ${1:-log}"_"$datainname"_running.out" # if need list.out just
+mv -n ${1:-log}"_"$datainname ./arhives #???? if arhive exist and broken?????
+rm -f *.out ${1:-log}"_"$datainname 2>/dev/null # !!!ACHTUNG!!! DELETE ALL FILES *.out!
+tar -xOf ./arhives/${1:-log}"_"$datainname &> /dev/null || { echo -e "\e[31mError in arhive file\e[0m" && exit 1; } # test arhive even if it exist
+echo -e "\e[42mNo error\e[0m"
 exit 0
-fi
-echo "Error in arhive file"
-while [ "$?" -eq 0 ]; do
-echo "Delete arhive file?  y\n"; read answ
-case $answ in
-y|Y) echo  $server"_"$datainname "deleted"; rm -f ./arhives/$server"_"$datainname &> /dev/null; exit 0;;
-n|N) echo  $server"_"$datainname "not deleted by careful"; exit 1 ;;
-*) echo ""
-esac
-done
