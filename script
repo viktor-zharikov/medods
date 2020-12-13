@@ -1,16 +1,14 @@
 #!/bin/bash
-wget --timeout=15 https://raw.githubusercontent.com/GreatMedivack/files/master/list.out &>/dev/null || { echo -e "\e[31mError in wget\e[0m" && exit 2; }  
-datainname=$(date +%d_%m_%y)
-grep '\(Error\|CrashLoopBackOff\)' list.out | awk '{print $1}' | sed -r 's/\-[a-z0-9]{4,}+\-.[^\-]+$//g' > ${1:-log}"_"$datainname"_failed.out"
-grep 'Running' list.out | awk '{print $1}' | sed -r 's/\-[a-z0-9]{4,}+\-.[^\-]+$//g' > ${1:-log}"_"$datainname"_running.out" # Если нужны срабатывания на demomed-init-job-vsgjv, удалить{4,}
-install -m 444 <(echo -e "- Количество работающих сервисов: `wc -l ${1:-log}"_"$datainname"_running.out"| awk '{print $1}'`\n
-- Количество сервисов с ошибками: `wc -l ${1:-log}"_"$datainname"_failed.out" | awk '{print $1}'`\n
-- Имя системного пользователя: `echo $USER`\n
-- Дата: `date +%x` ") ${1:-log}"_"$datainname"_report.out"
+wget --timeout=15 https://raw.githubusercontent.com/GreatMedivack/files/master/list.out &>/dev/null || { printf '\e[1;31m%s\e[0m\n' "Error in wget" && exit 2; } 
+[ -z "$1" ] && set $1 LOG_$(date +%d_%m_%y) ||  set $1_$(date +%d_%m_%y) 
+grep '\(Error\|CrashLoopBackOff\)' list.out | awk '{print $1}' | sed -r 's/\-[a-z0-9]{4,}+\-.[^\-]+$//g' > $1"_failed.out"
+grep 'Running' list.out | awk '{print $1}' | sed -r 's/\-[a-z0-9]{4,}+\-.[^\-]+$//g' > $1"_running.out" # Если нужны срабатывания на demomed-init-job-vsgjv, удалить{4,}
+install -m 444 <(printf "%s" "- Количество работающих сервисов: `wc -l $1"_running.out"| awk '{print $1}'`
+- Количество сервисов с ошибками: `wc -l $1"_failed.out" | awk '{print $1}'`
+- Имя системного пользователя: `echo $USER`
+- Дата: `date +%x`") $1"_report.out"
 mkdir -p arhives 
-tar -zcf ${1:-log}"_"$datainname ${1:-log}"_"$datainname"_report.out" ${1:-log}"_"$datainname"_failed.out" ${1:-log}"_"$datainname"_running.out" # if need list.out just
-mv -n ${1:-log}"_"$datainname ./arhives #???? if arhive exist and broken?????
-rm -f *.out ${1:-log}"_"$datainname 2>/dev/null # !!!ACHTUNG!!! DELETE ALL FILES *.out!
-tar -xOf ./arhives/${1:-log}"_"$datainname &> /dev/null || { echo -e "\e[31mError in arhive file\e[0m" && exit 1; } # test arhive even if it exist
-echo -e "\e[42mNo error\e[0m"
-exit 0
+tar -zcf $1 $1* # if need list.out just add them
+mv -n $1 ./arhives #???? if arhive exist and broken?????
+rm -f *.out $1 &>/dev/null # !!!ACHTUNG!!! DELETE ALL FILES *.out!
+tar -xOf ./arhives/$1 &> /dev/null && { printf '\e[1;32m%s\e[0m\n' "No errors" && exit 0 } || { printf '\e[1;31m%s\e[0m\n' "Error in arhive file" && exit 1; } # test arhive even if it exist
