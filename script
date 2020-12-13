@@ -11,4 +11,4 @@ mkdir -p arhives
 tar -zcf $1 $1* # if need list.out just add them
 mv -n $1 ./arhives #???? if arhive exist and broken?????
 rm -f *.out $1 &>/dev/null # !!!ACHTUNG!!! DELETE ALL FILES *.out!
-tar -xOf ./arhives/$1 &> /dev/null && { printf '\e[1;32m%s\e[0m\n' "No errors" && exit 0 } || { printf '\e[1;31m%s\e[0m\n' "Error in arhive file" && exit 1; } # test arhive even if it exist
+tar -xOf ./arhives/$1 &> /dev/null && { printf '\e[1;32m%s\e[0m\n' "No errors" && exit 0; } || { printf '\e[1;31m%s\e[0m\n' "Error in arhive file" && exit 1; } # test arhive even if it exist
